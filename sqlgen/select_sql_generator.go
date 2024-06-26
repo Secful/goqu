@@ -168,7 +168,7 @@ func (ssg *selectSQLGenerator) HavingSQL(b sb.SQLBuilder, having exp.ExpressionL
 func (ssg *selectSQLGenerator) OffsetSQL(b sb.SQLBuilder, offset uint) {
 	if offset > 0 {
 		b.Write(ssg.DialectOptions().OffsetFragment)
-		ssg.ExpressionSQLGenerator().Generate(b, offset)
+		ssg.ExpressionSQLGenerator().GenerateUint(b, offset)
 	}
 }
 

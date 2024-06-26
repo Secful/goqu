@@ -133,7 +133,7 @@ func (csg *commonSQLGenerator) LimitSQL(b sb.SQLBuilder, limit interface{}) {
 		if csg.dialectOptions.SurroundLimitWithParentheses {
 			b.WriteRunes(csg.dialectOptions.LeftParenRune)
 		}
-		csg.esg.Generate(b, limit)
+		csg.esg.GenerateUint(b, limit)
 		if csg.dialectOptions.SurroundLimitWithParentheses {
 			b.WriteRunes(csg.dialectOptions.RightParenRune)
 		}

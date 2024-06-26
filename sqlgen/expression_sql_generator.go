@@ -19,6 +19,7 @@ type (
 	ExpressionSQLGenerator interface {
 		Dialect() string
 		Generate(b sb.SQLBuilder, val interface{})
+		GenerateUint(b sb.SQLBuilder, val interface{})
 	}
 	// The default adapter. This class should be used when building a new adapter. When creating a new adapter you can
 	// either override methods, or more typically update default values.
@@ -74,6 +75,16 @@ func (esg *expressionSQLGenerator) Dialect() string {
 }
 
 var valuerReflectType = reflect.TypeOf((*driver.Valuer)(nil)).Elem()
+
+func (esg *expressionSQLGenerator) GenerateUint(b sb.SQLBuilder, val interface{}) {
+	uIntVal, ok := val.(uint)
+	if !ok {
+		b.SetError(errors.NewEncodeError(val))
+		return
+	}
+
+	b.WriteStrings(strconv.FormatInt(int64(uIntVal), 10))
+}
 
 func (esg *expressionSQLGenerator) Generate(b sb.SQLBuilder, val interface{}) {
 	if b.Error() != nil {
@@ -534,8 +545,9 @@ func (esg *expressionSQLGenerator) updateExpressionSQL(b sb.SQLBuilder, update e
 }
 
 // Generates SQL for a LiteralExpression
-//    L("a + b") -> a + b
-//    L("a = ?", 1) -> a = 1
+//
+//	L("a + b") -> a + b
+//	L("a = ?", 1) -> a = 1
 func (esg *expressionSQLGenerator) literalExpressionSQL(b sb.SQLBuilder, literal exp.LiteralExpression) {
 	l := literal.Literal()
 	args := literal.Args()
@@ -555,7 +567,8 @@ func (esg *expressionSQLGenerator) literalExpressionSQL(b sb.SQLBuilder, literal
 }
 
 // Generates SQL for a SQLFunctionExpression
-//   COUNT(I("a")) -> COUNT("a")
+//
+//	COUNT(I("a")) -> COUNT("a")
 func (esg *expressionSQLGenerator) sqlFunctionExpressionSQL(b sb.SQLBuilder, sqlFunc exp.SQLFunctionExpression) {
 	b.WriteStrings(sqlFunc.Name())
 	esg.Generate(b, sqlFunc.Args())
@@ -619,7 +632,8 @@ func (esg *expressionSQLGenerator) windowExpressionSQL(b sb.SQLBuilder, we exp.W
 }
 
 // Generates SQL for a CastExpression
-//   I("a").Cast("NUMERIC") -> CAST("a" AS NUMERIC)
+//
+//	I("a").Cast("NUMERIC") -> CAST("a" AS NUMERIC)
 func (esg *expressionSQLGenerator) castExpressionSQL(b sb.SQLBuilder, cast exp.CastExpression) {
 	b.Write(esg.dialectOptions.CastFragment).WriteRunes(esg.dialectOptions.LeftParenRune)
 	esg.Generate(b, cast.Casted())
